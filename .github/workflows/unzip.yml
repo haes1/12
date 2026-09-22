@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  ARCHIVE: EyeSwipe_android11_checked.zip
+  ARCHIVE: EyeSwipe_android11_fixed_crash.zip
 
 jobs:
   unzip-and-build:
@@ -50,7 +50,7 @@ jobs:
             # android.app.Service has no isDestroyed(); the `stopping` flag already covers it
             sed -i 's/stopping || isDestroyed || /stopping || /' "$SVC"
             sed -i 's/stopping || isDestroyed)/stopping)/' "$SVC"
-            grep -n 'isDestroyed' "$SVC" || echo 'isDestroyed removed'
+            grep -n 'isDestroyed' "$SVC" || echo 'no isDestroyed usage'
           fi
 
       - name: Set up JDK 17
