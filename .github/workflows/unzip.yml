@@ -1,30 +1,76 @@
-name: Unzip EyeSwipe
+name: Unzip and build EyeSwipe
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - '*.zip'
+      - '.github/workflows/unzip.yml'
 
 permissions:
   contents: write
 
 jobs:
-  unzip:
+  unzip-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Unpack archive
         run: |
-          rm -rf EyeSwipe
-          mkdir -p EyeSwipe
-          unzip -o EyeSwipe.zip -d EyeSwipe
+          ZIP=$(ls -1 *.zip | head -n 1)
+          echo "Using archive: $ZIP"
+          rm -rf EyeSwipe _unzip
+          mkdir -p _unzip
+          unzip -o "$ZIP" -d _unzip
+          # If the archive has a single top-level folder, use its contents as the project root
+          COUNT=$(ls -1A _unzip | wc -l)
+          FIRST=$(ls -1A _unzip | head -n 1)
+          if [ "$COUNT" = "1" ] && [ -d "_unzip/$FIRST" ]; then
+            mv "_unzip/$FIRST" EyeSwipe
+          else
+            mv _unzip EyeSwipe
+          fi
+          rm -rf _unzip
           find EyeSwipe -type f | sort
 
-      - name: Commit result
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build debug APK
+        id: build
+        continue-on-error: true
+        working-directory: EyeSwipe
         run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon 2>&1 | tee ../build.log
+
+      - name: Upload APK artifact
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: EyeSwipe-debug-apk
+          path: EyeSwipe/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish sources, APK and build log back to the repo
+        if: always()
+        run: |
+          mkdir -p artifacts
+          if [ -f EyeSwipe/app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp EyeSwipe/app/build/outputs/apk/debug/app-debug.apk artifacts/app-debug.apk
+            echo "status: SUCCESS" > artifacts/build-status.txt
+          else
+            echo "status: FAILED" > artifacts/build-status.txt
+          fi
+          tail -n 150 build.log >> artifacts/build-status.txt || true
+          rm -rf EyeSwipe/build EyeSwipe/app/build EyeSwipe/.gradle
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A EyeSwipe
-          git commit -m "Unpack EyeSwipe.zip (full contents)" || echo "nothing to commit"
+          git add -A EyeSwipe artifacts
+          git commit -m "Unpack archive and publish APK build result" || echo "nothing to commit"
+          git pull --rebase
           git push
