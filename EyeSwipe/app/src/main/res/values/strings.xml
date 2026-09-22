@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">EyeSwipe</string>
+    <string name="subtitle">Управление лентой без рук</string>
+    <string name="accessibility_service_description">EyeSwipe выполняет жест прокрутки вверх, когда пользователь смотрит вверх.</string>
+
+    <string name="camera_label">КАМЕРА</string>
+    <string name="accessibility_label">ЖЕСТЫ</string>
+    <string name="status_ready">Готово</string>
+    <string name="status_needed">Нужно настроить</string>
+    <string name="btn_camera_granted">Камера разрешена</string>
+    <string name="btn_camera_permission">Разрешить камеру</string>
+    <string name="btn_enable_accessibility">Включить службу жестов</string>
+
+    <string name="btn_test_camera">Проверить захват лица</string>
+    <string name="btn_stop_test">Остановить проверку</string>
+    <string name="capture_searching">Ищу лицо…</string>
+    <string name="capture_face_found">Лицо захвачено</string>
+    <string name="capture_trigger_ready">Порог достигнут ↑</string>
+    <string name="capture_off">Проверка выключена</string>
+    <string name="capture_camera_error">Не удалось открыть камеру</string>
+    <string name="pitch_value">Наклон: %.1f°</string>
+    <string name="threshold_small">Срабатывание: %1$d°</string>
+    <string name="pitch_default">Наклон: —</string>
+    <string name="threshold_default">Порог: —</string>
+
+    <string name="setup_title">Настройка</string>
+    <string name="sensitivity_label">Чувствительность</string>
+    <string name="threshold_value">Срабатывание после наклона: %1$d°</string>
+    <string name="btn_start_tracking">Запустить EyeSwipe</string>
+    <string name="btn_stop_tracking">Остановить EyeSwipe</string>
+</resources>
