@@ -22,18 +22,14 @@ jobs:
 
       - name: Remove everything except the archive and this workflow
         run: |
-          git rm -r --cached . -q
-          find . -mindepth 1 -maxdepth 1 \
-            ! -name '.git' \
-            ! -name '.github' \
-            ! -name "$ARCHIVE" \
-            -exec rm -rf {} +
-          find .github -mindepth 1 ! -path '.github/workflows' ! -path '.github/workflows/unzip.yml' -maxdepth 2 -exec rm -rf {} + || true
+          rm -rf artifacts EyeSwipe build.log
+          for f in *.zip; do
+            [ "$f" = "$ARCHIVE" ] || rm -f "$f"
+          done
           ls -la
 
       - name: Unpack archive
         run: |
-          rm -rf EyeSwipe _unzip
           mkdir -p _unzip
           unzip -o "$ARCHIVE" -d _unzip
           COUNT=$(ls -1A _unzip | wc -l)
@@ -45,6 +41,17 @@ jobs:
           fi
           rm -rf _unzip
           find EyeSwipe -type f | sort
+
+      - name: Patch known compile errors
+        working-directory: EyeSwipe
+        run: |
+          SVC=app/src/main/java/com/example/eyeswipe/EyeTrackingService.kt
+          if [ -f "$SVC" ]; then
+            # android.app.Service has no isDestroyed(); the `stopping` flag already covers it
+            sed -i 's/stopping || isDestroyed || /stopping || /' "$SVC"
+            sed -i 's/stopping || isDestroyed)/stopping)/' "$SVC"
+            grep -n 'isDestroyed' "$SVC" || echo 'isDestroyed removed'
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -90,10 +97,10 @@ jobs:
             echo "status: FAILED" > artifacts/build-status.txt
           fi
           tail -n 150 build.log >> artifacts/build-status.txt || true
-          rm -rf EyeSwipe/build EyeSwipe/app/build EyeSwipe/.gradle
+          rm -rf EyeSwipe/build EyeSwipe/app/build EyeSwipe/.gradle build.log
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Clean repo, unpack $ARCHIVE, publish APK build result" || echo "nothing to commit"
+          git commit -m "Clean repo, unpack archive, publish APK build result" || echo "nothing to commit"
           git pull --rebase
           git push
