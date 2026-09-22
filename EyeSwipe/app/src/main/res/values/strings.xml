@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">EyeSwipe</string>
+    <string name="accessibility_service_description">Lets EyeSwipe perform an upward swipe gesture when you look up, so you can scroll feeds hands-free.</string>
+
+    <string name="status_format">Camera permission: %1$s     Accessibility service: %2$s</string>
+    <string name="btn_camera_permission">Grant camera permission</string>
+    <string name="btn_enable_accessibility">Open Accessibility settings</string>
+    <string name="sensitivity_label">Sensitivity (how far you must tilt your head up)</string>
+    <string name="threshold_value">Threshold: %1$d°</string>
+    <string name="btn_start_tracking">Start tracking</string>
+    <string name="btn_stop_tracking">Stop tracking</string>
+</resources>
