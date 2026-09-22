@@ -110,7 +110,7 @@ class EyeTrackingService : LifecycleService() {
     private fun startCamera() {
         val providerFuture = ProcessCameraProvider.getInstance(this)
         providerFuture.addListener({
-            if (stopping || isDestroyed || !hasCameraPermission()) {
+            if (stopping || !hasCameraPermission()) {
                 Log.w(TAG, "Camera startup skipped: service is destroyed or permission is missing")
                 return@addListener
             }
