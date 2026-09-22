@@ -1,0 +1,28 @@
+name: Unzip EyeSwipe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack archive
+        run: |
+          rm -rf EyeSwipe
+          mkdir -p EyeSwipe
+          unzip -o EyeSwipe.zip -d EyeSwipe
+          find EyeSwipe -type f | sort
+
+      - name: Commit result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A EyeSwipe
+          git commit -m "Unpack EyeSwipe.zip (full contents)" || echo "nothing to commit"
+          git push
