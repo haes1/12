@@ -1,4 +1,4 @@
-status: SUCCESS
+status: FAILED
 
 Welcome to Gradle 9.7.1!
 
@@ -25,16 +25,16 @@ w: file:///home/runner/work/12/12/EyeSwipe/app/build.gradle.kts:29:5: 'fun BaseA
 > Task :app:generateDebugResources
 > Task :app:packageDebugResources
 > Task :app:mergeDebugResources
-> Task :app:checkDebugAarMetadata
-> Task :app:mapDebugSourceSetPaths
 > Task :app:parseDebugLocalResources
-> Task :app:createDebugCompatibleScreenManifests
+> Task :app:checkDebugAarMetadata
 > Task :app:dataBindingGenBaseClassesDebug
+> Task :app:mapDebugSourceSetPaths
+> Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
 > Task :app:javaPreCompileDebug
+> Task :app:processDebugManifestForPackage
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
@@ -44,33 +44,25 @@ w: file:///home/runner/work/12/12/EyeSwipe/app/build.gradle.kts:29:5: 'fun BaseA
 > Task :app:processDebugResources
 > Task :app:checkDebugDuplicateClasses
 
-> Task :app:compileDebugKotlin
-e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
-    1. Kotlin compile daemon is ready
-w: file:///home/runner/work/12/12/EyeSwipe/app/src/main/java/com/example/eyeswipe/MainActivity.kt:167:5 Annotation 'androidx.camera.core.ExperimentalGetImage' is not annotated with '@RequiresOptIn'. '@OptIn' has no effect.
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/12/12/EyeSwipe/app/src/main/java/com/example/eyeswipe/EyeTrackingService.kt:113:29 Unresolved reference 'isDestroyed'.
 
 > Task :app:mergeExtDexDebug
-> Task :app:compileDebugJavaWithJavac
-> Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
-> Task :app:processDebugJavaRes
-> Task :app:mergeLibDexDebug
-> Task :app:mergeDebugJniLibFolders
-> Task :app:mergeProjectDexDebug
-> Task :app:mergeDebugNativeLibs
-> Task :app:mergeDebugJavaResource
-> Task :app:validateSigningDebug
-> Task :app:writeDebugAppMetadata
-> Task :app:writeDebugSigningConfigVersions
-
-> Task :app:stripDebugDebugSymbols
-Unable to strip the following libraries, packaging them as they are: libface_detector_v2_jni.so, libimage_processing_util_jni.so, libsurface_util_jni.so.
-
-> Task :app:packageDebug
-> Task :app:createDebugApkListingFileRedirect
-> Task :app:assembleDebug
 
 [Incubating] Problems report is available at: file:///home/runner/work/12/12/EyeSwipe/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'org.jetbrains.kotlin.android').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 
@@ -78,6 +70,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 2m 14s
-38 actionable tasks: 38 executed
-Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html
+BUILD FAILED in 2m
+23 actionable tasks: 23 executed

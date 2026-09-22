@@ -41,10 +41,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.8.4")
 
     // CameraX — background camera capture without a preview UI
-    implementation("androidx.camera:camera-core:1.6.1")
-    implementation("androidx.camera:camera-camera2:1.6.1")
-    implementation("androidx.camera:camera-lifecycle:1.6.1")
-    implementation("androidx.camera:camera-view:1.6.1")
+    implementation("androidx.camera:camera-core:1.4.2")
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
 
     // ML Kit Face Detection (model bundled into the APK, works fully offline)
     implementation("com.google.mlkit:face-detection:16.1.7")

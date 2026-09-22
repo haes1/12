@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private var cameraProvider: ProcessCameraProvider? = null
     private var testRunning = false
     private var trackingRunning = false
+    private var destroyed = false
 
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
@@ -106,7 +107,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (destroyed) return
+        // The user can grant/revoke Accessibility while Settings is open.
         refreshStatus()
+        if (trackingRunning && !isAccessibilityServiceEnabled()) {
+            stopService(Intent(this, EyeTrackingService::class.java))
+            trackingRunning = false
+            binding.btnToggleTracking.text = getString(R.string.btn_start_tracking)
+        }
     }
 
     private fun updateThreshold(progress: Int) {
@@ -135,7 +143,14 @@ class MainActivity : AppCompatActivity() {
         val future = ProcessCameraProvider.getInstance(this)
         future.addListener({
             if (!testRunning || isFinishing) return@addListener
-            val provider = future.get()
+            val provider = try {
+                future.get()
+            } catch (e: Exception) {
+                binding.captureState.text = getString(R.string.capture_camera_error)
+                testRunning = false
+                binding.btnTestCamera.text = getString(R.string.btn_test_camera)
+                return@addListener
+            }
             cameraProvider = provider
 
             val preview = Preview.Builder().build().also {
@@ -159,7 +174,9 @@ class MainActivity : AppCompatActivity() {
                     analysis
                 )
             } catch (e: Exception) {
+                testRunning = false
                 binding.captureState.post { binding.captureState.text = getString(R.string.capture_camera_error) }
+                binding.btnTestCamera.post { binding.btnTestCamera.text = getString(R.string.btn_test_camera) }
             }
         }, ContextCompat.getMainExecutor(this))
     }
@@ -179,8 +196,8 @@ class MainActivity : AppCompatActivity() {
 
         detector.process(inputImage)
             .addOnSuccessListener { faces ->
-                val face = faces.firstOrNull()
-                if (!testRunning) return@addOnSuccessListener
+                val face = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
+                if (!testRunning || destroyed || isFinishing) return@addOnSuccessListener
 
                 if (face == null) {
                     binding.captureState.post { binding.captureState.text = getString(R.string.capture_searching) }
@@ -234,9 +251,17 @@ class MainActivity : AppCompatActivity() {
             binding.btnToggleTracking.text = getString(R.string.btn_start_tracking)
         } else {
             // Android 14+ requires the camera FGS to be started while the app is visible.
-            ContextCompat.startForegroundService(this, Intent(this, EyeTrackingService::class.java))
-            trackingRunning = true
-            binding.btnToggleTracking.text = getString(R.string.btn_stop_tracking)
+            try {
+                ContextCompat.startForegroundService(this, Intent(this, EyeTrackingService::class.java))
+                trackingRunning = true
+                binding.btnToggleTracking.text = getString(R.string.btn_stop_tracking)
+            } catch (e: SecurityException) {
+                trackingRunning = false
+                Toast.makeText(this, "Не удалось запустить отслеживание: проверьте разрешение камеры", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                trackingRunning = false
+                Toast.makeText(this, "Не удалось запустить отслеживание", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -271,8 +296,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        destroyed = true
+        testRunning = false
         cameraProvider?.unbindAll()
-        cameraExecutor.shutdown()
+        cameraExecutor.shutdownNow()
         detector.close()
         super.onDestroy()
     }

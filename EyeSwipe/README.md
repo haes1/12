@@ -35,3 +35,12 @@ Accessibility API действительно поддерживает `dispatchG
 - Android показывает системный индикатор использования камеры.
 - Разные производители могут ограничивать длительную работу фоновых сервисов.
 - Перед публикацией в Google Play отдельно проверьте требования к AccessibilityService и назначению приложения.
+
+
+## Crash/startup hardening
+- Camera foreground service is `START_NOT_STICKY` so Android does not silently resurrect a camera service.
+- Missing camera permission and foreground-service startup failures are handled without an uncaught exception.
+- Camera provider acquisition/binding failures stop the service cleanly.
+- GitHub Actions installs a deterministic Gradle 8.7 toolchain instead of relying on a runner-global Gradle version.
+- Front camera is declared optional at install time; the app can show a useful error on devices without one.
+- Accessibility being disabled while tracking is active is detected when returning from Settings.

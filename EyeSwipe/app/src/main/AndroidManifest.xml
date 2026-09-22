@@ -8,7 +8,7 @@
 
     <uses-feature
         android:name="android.hardware.camera.front"
-        android:required="true" />
+        android:required="false" />
 
     <application
         android:allowBackup="true"

@@ -8,6 +8,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.content.pm.PackageManager
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -48,17 +49,34 @@ class EyeTrackingService : LifecycleService() {
     private var lastTriggerAtMs = 0L
     private var wasLookingUp = false
     private var consecutiveLookingUp = 0
+    @Volatile private var stopping = false
 
     override fun onCreate() {
         super.onCreate()
         cameraExecutor = Executors.newSingleThreadExecutor()
-        startForegroundNotification()
-        startCamera()
+        try {
+            startForegroundNotification()
+            if (!hasCameraPermission()) {
+                Log.e(TAG, "Camera permission is missing; stopping service")
+                stopSelf()
+                return
+            }
+            startCamera()
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Unable to start camera foreground service", e)
+            stopSelf()
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected service startup failure", e)
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        return START_STICKY
+        // Do not let Android silently resurrect a camera service after the app
+        // process has been killed. A user-visible start from MainActivity is
+        // required again, which avoids background camera startup restrictions.
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -92,7 +110,18 @@ class EyeTrackingService : LifecycleService() {
     private fun startCamera() {
         val providerFuture = ProcessCameraProvider.getInstance(this)
         providerFuture.addListener({
-            val provider = providerFuture.get()
+            if (stopping || isDestroyed || !hasCameraPermission()) {
+                Log.w(TAG, "Camera startup skipped: service is destroyed or permission is missing")
+                return@addListener
+            }
+
+            val provider = try {
+                providerFuture.get()
+            } catch (e: Exception) {
+                Log.e(TAG, "Unable to obtain camera provider", e)
+                stopSelf()
+                return@addListener
+            }
             cameraProvider = provider
 
             val analysis = ImageAnalysis.Builder()
@@ -105,6 +134,7 @@ class EyeTrackingService : LifecycleService() {
                 provider.bindToLifecycle(this, CameraSelector.DEFAULT_FRONT_CAMERA, analysis)
             } catch (e: Exception) {
                 Log.e(TAG, "Camera bind failed", e)
+                stopSelf()
             }
         }, ContextCompat.getMainExecutor(this))
     }
@@ -121,6 +151,7 @@ class EyeTrackingService : LifecycleService() {
 
         detector.process(inputImage)
             .addOnSuccessListener { faces ->
+                if (stopping) return@addOnSuccessListener
                 val face = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
                 if (face == null) {
                     wasLookingUp = false
@@ -153,11 +184,16 @@ class EyeTrackingService : LifecycleService() {
         SwipeAccessibilityService.instance?.performSwipeUp()
     }
 
+    private fun hasCameraPermission(): Boolean =
+        ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
+
     override fun onDestroy() {
-        super.onDestroy()
+        stopping = true
         cameraProvider?.unbindAll()
-        cameraExecutor.shutdown()
+        if (::cameraExecutor.isInitialized) cameraExecutor.shutdownNow()
         detector.close()
+        super.onDestroy()
     }
 
     companion object {
